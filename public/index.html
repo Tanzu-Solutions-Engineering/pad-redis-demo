@@ -20,6 +20,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
 </head>
 
 <body>
+	<button id="disconnect" class="btn btn-default" type="submit">Disconnect</button>
     <div id="app">
         <nav class="navbar navbar-inverse">
             <a class="navbar-brand" href="#">Amazon ElastiCache Chat</a>
@@ -75,9 +76,18 @@ or in the "license" file accompanying this file. This file is distributed on an 
     <script src="js/vue-focus/2.1.0/vue-focus.min.js"></script>
     <script src="js/socket.io/1.7.2/socket.io.min.js"></script>
     <script src="js/moment.js/2.17.1/moment.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
     <script>
         var socket = io();
+		
+		$("#disconnect").click(function() {
+			if (socket != null) {
+		        socket.disconnect();
+		    }
+			$("#app").hide();
+			$("#disconnect").prop("disabled", true);
+		});
 
         new Vue({
             el: '#app',

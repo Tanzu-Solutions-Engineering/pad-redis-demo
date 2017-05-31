@@ -17,7 +17,8 @@ var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
 
 var Redis = require('ioredis');
-var redis_address = process.env.REDIS_ADDRESS || 'redis://127.0.0.1:6379';
+var redis_cred = JSON.parse(process.env.VCAP_SERVICES)["p.redis"][0]["credentials"];
+var redis_address = "redis://:"+redis_cred["password"]+"@"+redis_cred["host"]+":"+redis_cred["port"] || 'redis://127.0.0.1:6379';
 
 var redis = new Redis(redis_address);
 var redis_subscribers = {};
