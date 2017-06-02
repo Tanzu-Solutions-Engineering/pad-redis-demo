@@ -16,10 +16,64 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
 
-var Redis = require('ioredis');
-var redis_cred = JSON.parse(process.env.VCAP_SERVICES)["p.redis"][0]["credentials"];
-var redis_address = "redis://:"+redis_cred["password"]+"@"+redis_cred["host"]+":"+redis_cred["port"] || 'redis://127.0.0.1:6379';
+var cfenv = require('cfenv');
+// default config for local redis (overridden when run on cloud foundry)
+var appEnv = cfenv.getAppEnv({
+  "vcap": {
+    "application": {
+      "name": "pad-redis-demo"
+    },
+    "services": {
+      "local-redis": [
+        {
+          "credentials": {
+            "hostname": "127.0.0.1",
+            "password": "",
+            "port": "6379"
+          },
+          "name": "test-redis",
+          "tags": [ "redis" ]
+        }
+      ]
+    }
+  }
+});
 
+// Two ways to bind to a redis service:
+// 1. Explicitly set the REDIS_SERVICE_NAME env variable to the name of the redis service (eg: test-redis)
+// 2. Select the first service that contains a 'redis' tag
+var redis_cred;
+if (process.env.REDIS_SERVICE_NAME) {
+  redis_cred = appEnv.getServiceCreds(process.env.REDIS_SERVICE_NAME);
+} else {
+  var found;
+  var services = appEnv.getServices();
+  for (var serviceName in services) {
+    if (services.hasOwnProperty(serviceName)) {
+      var service = services[serviceName];
+      service.tags.some(function(tag) {
+        if (tag == "redis") {
+          found = service;
+          return;
+        }
+      });
+      if (found) {
+        redis_cred = appEnv.getServiceCreds(found.name);
+        break;
+      }
+    }
+  }
+}
+
+if (!redis_cred) {
+  console.log('No Redis service bound to this app.');
+  process.exit(1);
+}
+
+// p-redis uses "host" but rediscloud uses "hostname"
+var redis_address = "redis://:"+redis_cred["password"]+"@"+(redis_cred["host"] || redis_cred["hostname"])+":"+redis_cred["port"];
+
+var Redis = require('ioredis');
 var redis = new Redis(redis_address);
 var redis_subscribers = {};
 var channel_history_max = 10;
