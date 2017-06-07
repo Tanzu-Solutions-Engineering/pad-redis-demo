@@ -1,17 +1,9 @@
 <!DOCTYPE html>
-<!--
-Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
-Licensed under the Amazon Software License (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
-
-    http://aws.amazon.com/asl/
-
-or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
--->
 <html lang="en">
 
 <head>
-    <title>Amazon ElastiCache Chat</title>
+    <title>Pivotal Redis Chat</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -20,11 +12,12 @@ or in the "license" file accompanying this file. This file is distributed on an 
 </head>
 
 <body>
-	<button id="disconnect" class="btn btn-default" type="submit">Disconnect</button>
     <div id="app">
-        <nav class="navbar navbar-inverse">
-            <a class="navbar-brand" href="#">Amazon ElastiCache Chat</a>
-        </nav>
+		<div id="navbar">
+        	<div id="channel-name">Pivotal Redis Chat</div>
+			<button id="disconnect" class="btn btn-danger" onclick="toggle()">Disconnect</button>
+		</div>
+        
         <div class="container-fluid">
             <div class="row">
                 <nav class="col-sm-2 bg-faded members">
@@ -81,13 +74,23 @@ or in the "license" file accompanying this file. This file is distributed on an 
     <script>
         var socket = io();
 		
-		$("#disconnect").click(function() {
-			if (socket != null) {
-		        socket.disconnect();
-		    }
-			$("#app").hide();
-			$("#disconnect").prop("disabled", true);
-		});
+		function toggle() {
+			if ($("#navbar").has("#disconnect").length) {
+				if (socket != null) {
+			        socket.disconnect();
+			    }
+				$("#app .container-fluid").hide();
+				$("#disconnect").removeClass("btn btn-danger").addClass("btn btn-success");
+				$("#disconnect").html("Connect");
+				$("#disconnect").attr("id", "connect");
+			} else {
+				socket.connect();
+				$("#app .container-fluid").show();
+				$("#connect").removeClass("btn btn-success").addClass("btn btn-danger");
+				$("#connect").html("Disconnect");
+				$("#connect").attr("id", "disconnect");
+			}
+		}
 
         new Vue({
             el: '#app',
