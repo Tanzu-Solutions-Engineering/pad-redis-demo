@@ -1,0 +1,46 @@
+---
+jobs:
+- name: deploy
+  public: true
+  plan:
+  - get: pad-redis-demo
+    trigger: true
+  - put: cf-env
+    resource: cf-env
+    params:
+      commands:
+      - command: create-org
+      - command: create-space
+      - command: create-service
+        service: {{app-redis-service}}
+        plan: {{app-redis-plan}}
+        service_instance: {{app-redis-si}}
+      - command: push
+        app_name: {{app-name}}
+        hostname: {{app-host}}
+        path: pad-redis-demo
+        manifest: pad-redis-demo/manifest.yml
+
+resources:
+- name: pad-redis-demo
+  type: git
+  source:
+    uri: {{project-git-uri}}
+    branch: {{project-git-branch}}
+
+- name: cf-env
+  type: cf-cli-resource
+  source:
+    api: {{cf-api-url}}
+    skip_cert_check: {{cf-skip-ssl}}
+    username: {{cf-username}}
+    password: {{cf-password}}
+    org: {{cf-org}}
+    space: {{cf-space}}
+
+resource_types:
+- name: cf-cli-resource
+  type: docker-image
+  source:
+    repository: pivotalpa/cf-cli-resource
+    tag: latest
